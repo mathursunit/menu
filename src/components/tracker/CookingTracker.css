@@ -1,0 +1,132 @@
+.tracker-page h2 {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  margin-bottom: var(--space-lg);
+}
+
+.tracker-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--space-md);
+  margin-bottom: var(--space-xl);
+}
+
+.stat-card {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-light);
+  padding: var(--space-lg);
+  text-align: center;
+}
+
+.stat-icon {
+  color: var(--color-primary);
+  margin-bottom: var(--space-sm);
+}
+
+.stat-value {
+  font-size: var(--font-size-3xl);
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1;
+  margin-bottom: var(--space-xs);
+}
+
+.stat-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.stat-sub {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+.tracker-section {
+  margin-bottom: var(--space-xl);
+}
+
+.tracker-section h3 {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  margin-bottom: var(--space-md);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.tracker-meals {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.tracker-meal-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.tracker-meal-label {
+  width: 80px;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+.tracker-meal-bar-bg {
+  flex: 1;
+  height: 8px;
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.tracker-meal-bar {
+  height: 100%;
+  background: var(--color-success);
+  border-radius: var(--radius-full);
+  transition: width var(--transition-slow);
+  min-width: 4px;
+}
+
+.tracker-meal-count {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  width: 30px;
+  text-align: right;
+}
+
+.tracker-photos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-md);
+}
+
+.tracker-photo {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-light);
+}
+
+.tracker-photo img {
+  width: 100%;
+  aspect-ratio: 4/3;
+  object-fit: cover;
+}
+
+.tracker-photo-info {
+  padding: var(--space-sm);
+}
+
+.tracker-photo-name {
+  display: block;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+.tracker-photo-date {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}

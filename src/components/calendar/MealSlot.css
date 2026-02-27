@@ -1,0 +1,93 @@
+.meal-slot {
+  border-radius: var(--radius-sm);
+  padding: var(--space-xs) var(--space-sm);
+  font-size: var(--font-size-sm);
+  transition: background var(--transition-fast);
+  min-height: 44px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.meal-slot--empty {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-xs);
+  border: 1px dashed var(--color-border);
+  color: var(--color-text-muted);
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  justify-content: flex-start;
+}
+
+.meal-slot--empty:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: var(--color-primary-light);
+}
+
+.meal-slot--planned {
+  background: var(--color-primary-light);
+  border-left: 3px solid var(--color-planned);
+}
+
+.meal-slot--cooked {
+  background: var(--color-success-light);
+  border-left: 3px solid var(--color-cooked);
+}
+
+.meal-slot-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.meal-slot-label {
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.meal-slot-recipe {
+  font-weight: 500;
+  color: var(--color-text);
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+.meal-slot-actions {
+  display: flex;
+  gap: 2px;
+}
+
+.meal-slot-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-full);
+  color: var(--color-text-muted);
+  transition: color var(--transition-fast), background var(--transition-fast);
+}
+
+.meal-slot-action:hover {
+  color: var(--color-primary);
+  background: var(--color-bg-hover);
+}
+
+.meal-slot-action--remove:hover {
+  color: var(--color-danger);
+}
+
+.meal-slot-photo {
+  width: 100%;
+  border-radius: var(--radius-sm);
+  margin-top: var(--space-xs);
+  max-height: 80px;
+  object-fit: cover;
+}

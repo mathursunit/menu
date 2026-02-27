@@ -1,0 +1,112 @@
+.month-view-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-md);
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.month-view-loading {
+  text-align: center;
+  padding: var(--space-2xl);
+  color: var(--color-text-muted);
+}
+
+.month-grid {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-light);
+  overflow: hidden;
+}
+
+.month-grid-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.month-grid-day-label {
+  text-align: center;
+  padding: var(--space-sm);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  letter-spacing: 0.5px;
+}
+
+.month-grid-week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.month-grid-week:last-child {
+  border-bottom: none;
+}
+
+.month-grid-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-sm);
+  min-height: 64px;
+  border-right: 1px solid var(--color-border-light);
+  transition: background var(--transition-fast);
+  text-decoration: none;
+  color: inherit;
+}
+
+.month-grid-cell:last-child {
+  border-right: none;
+}
+
+.month-grid-cell:hover {
+  background: var(--color-bg-hover);
+}
+
+.month-grid-cell--today {
+  background: var(--color-primary-light);
+}
+
+.month-cell-day {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  margin-bottom: var(--space-xs);
+}
+
+.month-cell-dots {
+  display: flex;
+  gap: 3px;
+}
+
+.month-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+}
+
+.month-dot--empty {
+  background: transparent;
+}
+
+.month-dot--planned {
+  background: var(--color-planned);
+}
+
+.month-dot--cooked {
+  background: var(--color-cooked);
+}
+
+@media (min-width: 768px) {
+  .month-grid-cell {
+    min-height: 80px;
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .month-dot {
+    width: 10px;
+    height: 10px;
+  }
+}

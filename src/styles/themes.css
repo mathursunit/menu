@@ -1,0 +1,142 @@
+/* ===== BASE DESIGN TOKENS ===== */
+:root {
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 2rem;
+
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+  --transition-slow: 400ms ease;
+
+  --header-height: 60px;
+  --bottom-nav-height: 64px;
+}
+
+/* ===== THEME: Warm & Cozy ===== */
+[data-theme="warm"] {
+  --color-bg: #faf6f1;
+  --color-bg-secondary: #f3ebe0;
+  --color-bg-card: #ffffff;
+  --color-bg-hover: #f5ede4;
+  --color-bg-modal: rgba(61, 44, 30, 0.5);
+  --color-text: #3d2c1e;
+  --color-text-secondary: #6b5440;
+  --color-text-muted: #8b7355;
+  --color-primary: #c4704b;
+  --color-primary-hover: #a85a38;
+  --color-primary-light: #f5ddd1;
+  --color-accent: #d4a574;
+  --color-border: #e6d5c3;
+  --color-border-light: #f0e4d6;
+  --color-success: #6b8e5a;
+  --color-success-light: #e3f0dc;
+  --color-danger: #c44d4d;
+  --color-danger-light: #fde8e8;
+  --color-warning: #d4a03c;
+  --color-warning-light: #fdf3dc;
+  --color-cooked: #6b8e5a;
+  --color-planned: #c4704b;
+  --color-favorite: #e8a838;
+}
+
+/* ===== THEME: Clean & Minimal ===== */
+[data-theme="clean"] {
+  --color-bg: #f8f9fa;
+  --color-bg-secondary: #e9ecef;
+  --color-bg-card: #ffffff;
+  --color-bg-hover: #e9ecef;
+  --color-bg-modal: rgba(33, 37, 41, 0.5);
+  --color-text: #212529;
+  --color-text-secondary: #495057;
+  --color-text-muted: #6c757d;
+  --color-primary: #0066cc;
+  --color-primary-hover: #0052a3;
+  --color-primary-light: #e0efff;
+  --color-accent: #4dabf7;
+  --color-border: #dee2e6;
+  --color-border-light: #e9ecef;
+  --color-success: #2b8a3e;
+  --color-success-light: #d3f9d8;
+  --color-danger: #e03131;
+  --color-danger-light: #ffe0e0;
+  --color-warning: #e67700;
+  --color-warning-light: #fff3d0;
+  --color-cooked: #2b8a3e;
+  --color-planned: #0066cc;
+  --color-favorite: #f59f00;
+}
+
+/* ===== THEME: Colorful & Playful ===== */
+[data-theme="colorful"] {
+  --color-bg: #fef9ef;
+  --color-bg-secondary: #fdf0d5;
+  --color-bg-card: #ffffff;
+  --color-bg-hover: #fff3db;
+  --color-bg-modal: rgba(45, 34, 53, 0.5);
+  --color-text: #2d2235;
+  --color-text-secondary: #4a3d5a;
+  --color-text-muted: #6b5e7b;
+  --color-primary: #e85d75;
+  --color-primary-hover: #d14560;
+  --color-primary-light: #fde0e6;
+  --color-accent: #f7b731;
+  --color-border: #eddcf5;
+  --color-border-light: #f5edfb;
+  --color-success: #20bf6b;
+  --color-success-light: #d1fae5;
+  --color-danger: #eb3b5a;
+  --color-danger-light: #fde0e6;
+  --color-warning: #f7b731;
+  --color-warning-light: #fff8e1;
+  --color-cooked: #20bf6b;
+  --color-planned: #e85d75;
+  --color-favorite: #f7b731;
+}
+
+/* ===== THEME: Dark Mode ===== */
+[data-theme="dark"] {
+  --color-bg: #1a1a2e;
+  --color-bg-secondary: #16213e;
+  --color-bg-card: #25253e;
+  --color-bg-hover: #2e2e4a;
+  --color-bg-modal: rgba(10, 10, 20, 0.7);
+  --color-text: #e0e0e0;
+  --color-text-secondary: #b0b0c0;
+  --color-text-muted: #8888a0;
+  --color-primary: #e07a5f;
+  --color-primary-hover: #c96a52;
+  --color-primary-light: #3d2a24;
+  --color-accent: #81b29a;
+  --color-border: #3a3a55;
+  --color-border-light: #2e2e4a;
+  --color-success: #81b29a;
+  --color-success-light: #1a2e24;
+  --color-danger: #e07a5f;
+  --color-danger-light: #3d2a24;
+  --color-warning: #f2cc8f;
+  --color-warning-light: #3d3424;
+  --color-cooked: #81b29a;
+  --color-planned: #e07a5f;
+  --color-favorite: #f2cc8f;
+}
