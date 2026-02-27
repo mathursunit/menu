@@ -43,8 +43,9 @@ export function AuthProvider({ children }) {
       setError(null);
       await signInWithPopup(auth, googleProvider);
     } catch (err) {
-      if (err.code !== 'auth/popup-closed-by-user') {
-        setError('Login failed. Please try again.');
+      console.error('Auth error:', err.code, err.message);
+      if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
+        setError(`Login failed: ${err.code || err.message}`);
       }
     }
   };
