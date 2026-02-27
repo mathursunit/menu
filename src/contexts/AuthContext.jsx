@@ -1,5 +1,10 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
+import {
+  onAuthStateChanged,
+  signInWithRedirect,
+  getRedirectResult,
+  signOut,
+} from 'firebase/auth';
 import { auth, googleProvider } from '../lib/firebase';
 
 const ALLOWED_EMAILS = [
@@ -21,12 +26,19 @@ export function AuthProvider({ children }) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    // Handle redirect result when returning from Google sign-in
+    getRedirectResult(auth).catch((err) => {
+      console.error('Redirect auth error:', err.code, err.message);
+      if (err.code !== 'auth/popup-closed-by-user') {
+        setError(`Login failed: ${err.code || err.message}`);
+      }
+    });
+
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       if (firebaseUser && ALLOWED_EMAILS.includes(firebaseUser.email)) {
         setUser(firebaseUser);
         setError(null);
       } else if (firebaseUser) {
-        // Signed in but not allowed
         signOut(auth);
         setUser(null);
         setError('Sorry, this app is only for Sara and Sunit.');
@@ -38,16 +50,9 @@ export function AuthProvider({ children }) {
     return unsubscribe;
   }, []);
 
-  const login = async () => {
-    try {
-      setError(null);
-      await signInWithPopup(auth, googleProvider);
-    } catch (err) {
-      console.error('Auth error:', err.code, err.message);
-      if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
-        setError(`Login failed: ${err.code || err.message}`);
-      }
-    }
+  const login = () => {
+    setError(null);
+    signInWithRedirect(auth, googleProvider);
   };
 
   const logout = () => signOut(auth);
