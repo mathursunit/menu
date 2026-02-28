@@ -11,12 +11,14 @@ function friendlyError(err) {
   const full = `${code} ${msg}`;
 
   if (full.includes('quota') || full.includes('429') || full.includes('resource_exhausted'))
-    return 'Rate limited — try again in a few minutes';
+    return '⏳ Rate limited — please try again in a few minutes. We generate meals using AI which has usage limits.';
   if (full.includes('api_key') || full.includes('403') || full.includes('permission'))
-    return 'API key error — contact support';
+    return 'API configuration issue — contact support@menu.mysunsar.com';
   if (full.includes('network') || full.includes('failed to fetch'))
-    return 'Network error — check your connection';
-  return "Couldn't generate meal suggestions. Try different preferences or try again.";
+    return 'Network error — check your internet connection and try again';
+  if (full.includes('invalid') || full.includes('parse'))
+    return 'Invalid response from meal generator — try different preferences or try again in a moment';
+  return "Couldn't generate meal suggestions. Try different preferences, check your connection, or try again.";
 }
 
 export function useWeeklyMealGenerator(preferences, allRecipes) {
@@ -45,9 +47,14 @@ export function useWeeklyMealGenerator(preferences, allRecipes) {
         );
 
         if (!filteredRecipes.length) {
-          setError('No recipes match your preferences. Try adjusting them.');
+          setError('No recipes match your preferences. Try selecting different cuisines, reducing difficulty level, or adding more recipes to your collection.');
           setGenerating(false);
           return null;
+        }
+
+        // Warn if very few recipes match (might lead to repetition)
+        if (filteredRecipes.length < 21) {
+          console.warn(`Only ${filteredRecipes.length} recipes match preferences (need 21 for 7 days without repeats)`);
         }
 
         // Build prompt
@@ -168,8 +175,16 @@ export function useWeeklyMealGenerator(preferences, allRecipes) {
         try {
           parsed = JSON.parse(text);
         } catch (e) {
-          console.error('Failed to parse Gemini response:', e, text);
-          setError('Invalid response from meal generator. Try again.');
+          console.error('Failed to parse Gemini response:', e, 'Raw text:', text);
+          setError('Meal generation returned invalid data. Try adjusting preferences and try again.');
+          setGenerating(false);
+          return null;
+        }
+
+        // Validate response structure
+        if (!parsed.mealPlan || typeof parsed.mealPlan !== 'object') {
+          console.error('Invalid meal plan structure:', parsed);
+          setError("Generated meal plan had unexpected format. Try different preferences.");
           setGenerating(false);
           return null;
         }

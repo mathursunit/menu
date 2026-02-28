@@ -104,11 +104,18 @@ export function MealPlannerModal({ isOpen, onClose }) {
               weekStartDate={weekStartDate}
               setWeekStartDate={setWeekStartDate}
               onGenerate={handleGenerate}
+              onCancel={onClose}
               generationError={generationError}
             />
           )}
 
-          {step === 'generating' && <GeneratingStep generationError={generationError} />}
+          {step === 'generating' && (
+            <GeneratingStep
+              generationError={generationError}
+              onRetry={handleGenerate}
+              onBack={() => setStep('preferences')}
+            />
+          )}
 
           {step === 'preview' && (
             <PreviewStep
@@ -133,6 +140,7 @@ function PreferencesStep({
   weekStartDate,
   setWeekStartDate,
   onGenerate,
+  onCancel,
   generationError,
 }) {
   const handleCuisineChange = (cuisine) => {
@@ -203,7 +211,7 @@ function PreferencesStep({
       {generationError && <div className="error-message">{generationError}</div>}
 
       <div className="form-actions">
-        <button className="btn btn-secondary" onClick={() => window.location.reload()}>
+        <button className="btn btn-secondary" onClick={onCancel}>
           Cancel
         </button>
         <button className="btn btn-primary" onClick={onGenerate}>
@@ -214,17 +222,27 @@ function PreferencesStep({
   );
 }
 
-function GeneratingStep({ generationError }) {
+function GeneratingStep({ generationError, onRetry, onBack }) {
   return (
     <div className="generating-step">
       {generationError ? (
-        <>
+        <div className="error-container">
+          <div className="error-icon">⚠️</div>
           <div className="error-message">{generationError}</div>
-        </>
+          <div className="error-actions">
+            <button className="btn btn-secondary" onClick={onBack}>
+              Back to Preferences
+            </button>
+            <button className="btn btn-primary" onClick={onRetry}>
+              Try Again
+            </button>
+          </div>
+        </div>
       ) : (
         <>
           <div className="spinner"></div>
           <p className="generating-text">Generating 7 days of delicious meals...</p>
+          <p className="generating-subtext">This usually takes 10-30 seconds...</p>
         </>
       )}
     </div>

@@ -104,12 +104,12 @@
 }
 
 .spinner {
-  width: 50px;
-  height: 50px;
+  width: 60px;
+  height: 60px;
   border: 4px solid var(--border-color);
   border-top-color: var(--primary-color);
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: spin 0.8s linear infinite, pulse-spinner 2s ease-in-out infinite;
   margin-bottom: 1.5rem;
 }
 
@@ -119,10 +119,50 @@
   }
 }
 
+@keyframes pulse-spinner {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(var(--primary-color-rgb), 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(var(--primary-color-rgb), 0);
+  }
+}
+
 .generating-text {
-  color: var(--text-secondary);
+  color: var(--text-primary);
   font-size: 0.95rem;
+  margin: 0 0 0.5rem 0;
+  font-weight: 500;
+}
+
+.generating-subtext {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
   margin: 0;
+}
+
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.error-icon {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.error-actions {
+  display: flex;
+  gap: 0.75rem;
+  width: 100%;
+  justify-content: center;
+}
+
+.error-actions .btn {
+  flex: 1;
+  max-width: 200px;
 }
 
 .error-message {
@@ -133,6 +173,13 @@
   margin-bottom: 1rem;
   font-size: 0.9rem;
   border-left: 3px solid #b91c1c;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.generating-step .error-message {
+  margin-bottom: 1.5rem;
+  max-width: 400px;
 }
 
 /* Preview Step */
@@ -276,9 +323,18 @@
     padding: 1rem;
   }
 
+  .preferences-step .form-group {
+    margin-bottom: 1rem;
+  }
+
   .cuisines-grid {
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
     gap: 0.5rem;
+  }
+
+  .checkbox-label {
+    padding: 0.5rem;
+    font-size: 0.85rem;
   }
 
   .preview-grid {
@@ -286,16 +342,126 @@
     gap: 0.75rem;
   }
 
-  .form-actions {
-    flex-direction: column-reverse;
-  }
-
-  .btn {
-    width: 100%;
+  .day-card {
+    padding: 0.75rem;
   }
 
   .day-header {
     flex-direction: column;
     align-items: flex-start;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .meal-item {
+    padding: 0.4rem 0;
+    font-size: 0.8rem;
+  }
+
+  .meal-type {
+    min-width: 50px;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+    gap: 0.5rem;
+  }
+
+  .btn {
+    width: 100%;
+    padding: 0.65rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-0.5px);
+  }
+
+  .generating-step {
+    padding: 2rem 1rem;
+    min-height: 250px;
+  }
+
+  .spinner {
+    width: 50px;
+    height: 50px;
+    border: 3px solid var(--border-color);
+  }
+
+  .generating-text {
+    font-size: 0.9rem;
+  }
+
+  .generating-subtext {
+    font-size: 0.8rem;
+  }
+
+  .error-actions {
+    flex-direction: column;
+  }
+
+  .error-actions .btn {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .meal-planner-modal {
+    max-height: 95vh;
+  }
+
+  .preferences-step {
+    padding: 0.75rem;
+  }
+
+  .form-label {
+    font-size: 0.9rem;
+  }
+
+  .cuisines-grid {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 0.35rem;
+  }
+
+  .checkbox-label {
+    padding: 0.4rem;
+    font-size: 0.8rem;
+  }
+
+  .day-card {
+    padding: 0.5rem;
+  }
+
+  .meals-list {
+    gap: 0.25rem;
+  }
+
+  .day-header {
+    font-size: 0.85rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .meal-item {
+    padding: 0.25rem 0;
+    font-size: 0.75rem;
+  }
+
+  .meal-type {
+    min-width: 45px;
+    font-size: 0.7rem;
+  }
+
+  .recipe-name {
+    font-size: 0.75rem;
+  }
+
+  .meal-time {
+    font-size: 0.7rem;
+  }
+
+  .spinner {
+    width: 45px;
+    height: 45px;
+    border: 3px solid var(--border-color);
   }
 }
