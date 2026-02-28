@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import useRecipes from '../../hooks/useRecipes';
+import { useRecipeImageParser } from '../../hooks/useRecipeImageParser';
 import { RECIPE_TAGS, UNIT_OPTIONS } from '../../utils/constants';
 import { parseIngredients } from '../../utils/ingredientParser';
-import { Plus, Trash2, ArrowLeft, ClipboardPaste, CheckCheck, X } from 'lucide-react';
+import { Plus, Trash2, ArrowLeft, ClipboardPaste, CheckCheck, X, Camera, Loader2 } from 'lucide-react';
 import './RecipeForm.css';
 
 const emptyIngredient = { name: '', quantity: '', unit: '' };
@@ -12,6 +13,7 @@ export default function RecipeForm() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { recipes, addRecipe, updateRecipe } = useRecipes();
+  const { parseImage, analyzing, analyzeError } = useRecipeImageParser();
   const isEdit = Boolean(id);
 
   const [form, setForm] = useState({
@@ -25,13 +27,15 @@ export default function RecipeForm() {
     ingredients: [{ ...emptyIngredient }],
   });
   const [saving, setSaving] = useState(false);
+  const [importSuccess, setImportSuccess] = useState(false);
 
   // Paste & parse panel state
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasteText, setPasteText] = useState('');
-  const pasteRef = useRef(null);
+  const pasteRef   = useRef(null);
+  const photoInput = useRef(null);
 
-  // Live-preview of the parsed result
+  // Live-preview of pasted text
   const parsedPreview = parseIngredients(pasteText);
 
   useEffect(() => {
@@ -39,14 +43,14 @@ export default function RecipeForm() {
       const recipe = recipes.find((r) => r.id === id);
       if (recipe) {
         setForm({
-          name: recipe.name || '',
-          description: recipe.description || '',
+          name:         recipe.name         || '',
+          description:  recipe.description  || '',
           instructions: recipe.instructions || '',
-          prepTime: recipe.prepTime || '',
-          cookTime: recipe.cookTime || '',
-          imageUrl: recipe.imageUrl || '',
-          tags: recipe.tags || [],
-          ingredients: recipe.ingredients?.length
+          prepTime:     recipe.prepTime     || '',
+          cookTime:     recipe.cookTime     || '',
+          imageUrl:     recipe.imageUrl     || '',
+          tags:         recipe.tags         || [],
+          ingredients:  recipe.ingredients?.length
             ? recipe.ingredients
             : [{ ...emptyIngredient }],
         });
@@ -54,57 +58,78 @@ export default function RecipeForm() {
     }
   }, [id, isEdit, recipes]);
 
-  // Focus textarea when the panel opens
+  // Focus paste textarea when panel opens
   useEffect(() => {
-    if (pasteOpen && pasteRef.current) {
-      pasteRef.current.focus();
-    }
+    if (pasteOpen && pasteRef.current) pasteRef.current.focus();
   }, [pasteOpen]);
 
-  const updateField = (field, value) => setForm((f) => ({ ...f, [field]: value }));
+  const updateField = (field, value) =>
+    setForm((f) => ({ ...f, [field]: value }));
 
-  const updateIngredient = (index, field, value) => {
+  const updateIngredient = (index, field, value) =>
     setForm((f) => ({
       ...f,
       ingredients: f.ingredients.map((ing, i) =>
         i === index ? { ...ing, [field]: value } : ing
       ),
     }));
-  };
 
-  const addIngredient = () => {
+  const addIngredient = () =>
     setForm((f) => ({ ...f, ingredients: [...f.ingredients, { ...emptyIngredient }] }));
-  };
 
-  const removeIngredient = (index) => {
+  const removeIngredient = (index) =>
     setForm((f) => ({
       ...f,
       ingredients: f.ingredients.filter((_, i) => i !== index),
     }));
-  };
 
-  const toggleTag = (tag) => {
+  const toggleTag = (tag) =>
     setForm((f) => ({
       ...f,
-      tags: f.tags.includes(tag) ? f.tags.filter((t) => t !== tag) : [...f.tags, tag],
+      tags: f.tags.includes(tag)
+        ? f.tags.filter((t) => t !== tag)
+        : [...f.tags, tag],
     }));
+
+  // ── Photo import ───────────────────────────────────────────────────────────
+  const handlePhotoChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    // Reset so the same file can be re-selected after an error
+    e.target.value = '';
+
+    const extracted = await parseImage(file);
+    if (!extracted) return;
+
+    setForm((f) => ({
+      ...f,
+      name:         extracted.name         || f.name,
+      description:  extracted.description  || f.description,
+      prepTime:     extracted.prepTime     !== '' ? extracted.prepTime  : f.prepTime,
+      cookTime:     extracted.cookTime     !== '' ? extracted.cookTime  : f.cookTime,
+      instructions: extracted.instructions || f.instructions,
+      tags:         extracted.tags.length  ? extracted.tags             : f.tags,
+      ingredients:  extracted.ingredients.length
+        ? extracted.ingredients
+        : f.ingredients,
+    }));
+
+    setImportSuccess(true);
+    setTimeout(() => setImportSuccess(false), 3000);
   };
 
-  // Add parsed ingredients to the form list
+  // ── Paste & parse ──────────────────────────────────────────────────────────
   const handleAddParsed = () => {
     if (parsedPreview.length === 0) return;
     setForm((f) => {
-      // Drop any trailing completely-empty row before appending
       const existing = f.ingredients.filter((ing) => ing.name.trim());
-      return {
-        ...f,
-        ingredients: [...existing, ...parsedPreview],
-      };
+      return { ...f, ingredients: [...existing, ...parsedPreview] };
     });
     setPasteText('');
     setPasteOpen(false);
   };
 
+  // ── Submit ─────────────────────────────────────────────────────────────────
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name.trim()) return;
@@ -112,8 +137,8 @@ export default function RecipeForm() {
     setSaving(true);
     const data = {
       ...form,
-      prepTime: form.prepTime ? Number(form.prepTime) : null,
-      cookTime: form.cookTime ? Number(form.cookTime) : null,
+      prepTime:    form.prepTime    ? Number(form.prepTime)    : null,
+      cookTime:    form.cookTime    ? Number(form.cookTime)    : null,
       ingredients: form.ingredients.filter((ing) => ing.name.trim()),
     };
 
@@ -130,6 +155,7 @@ export default function RecipeForm() {
     }
   };
 
+  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="recipe-form-page">
       <button className="recipe-form-back" onClick={() => navigate(-1)}>
@@ -138,6 +164,51 @@ export default function RecipeForm() {
       </button>
 
       <h2>{isEdit ? 'Edit Recipe' : 'New Recipe'}</h2>
+
+      {/* ── Photo import strip ─────────────────────────────────────────── */}
+      <div className="photo-import-strip">
+        <input
+          ref={photoInput}
+          type="file"
+          accept="image/*"
+          className="photo-import-input"
+          onChange={handlePhotoChange}
+        />
+
+        <button
+          type="button"
+          className={`photo-import-btn ${analyzing ? 'photo-import-btn--analyzing' : ''} ${importSuccess ? 'photo-import-btn--success' : ''}`}
+          onClick={() => photoInput.current?.click()}
+          disabled={analyzing}
+        >
+          {analyzing ? (
+            <>
+              <Loader2 size={16} className="spin" />
+              <span>Reading recipe…</span>
+            </>
+          ) : importSuccess ? (
+            <>
+              <CheckCheck size={16} />
+              <span>Recipe imported!</span>
+            </>
+          ) : (
+            <>
+              <Camera size={16} />
+              <span>Import from photo</span>
+            </>
+          )}
+        </button>
+
+        <span className="photo-import-hint">
+          {analyzing
+            ? 'Gemini is scanning the image…'
+            : 'Paste a screenshot of any recipe and auto-fill this form'}
+        </span>
+
+        {analyzeError && (
+          <p className="photo-import-error">{analyzeError}</p>
+        )}
+      </div>
 
       <form className="recipe-form" onSubmit={handleSubmit}>
         <div className="form-group">
@@ -157,7 +228,7 @@ export default function RecipeForm() {
             type="text"
             value={form.description}
             onChange={(e) => updateField('description', e.target.value)}
-            placeholder="Brief description..."
+            placeholder="Brief description…"
           />
         </div>
 
@@ -188,11 +259,11 @@ export default function RecipeForm() {
             type="url"
             value={form.imageUrl}
             onChange={(e) => updateField('imageUrl', e.target.value)}
-            placeholder="https://..."
+            placeholder="https://…"
           />
         </div>
 
-        {/* ── Ingredients ─────────────────────────────────────────────────── */}
+        {/* ── Ingredients ──────────────────────────────────────────────── */}
         <div className="form-group">
           <label>Ingredients</label>
 
@@ -245,11 +316,11 @@ export default function RecipeForm() {
               onClick={() => { setPasteOpen((o) => !o); setPasteText(''); }}
             >
               <ClipboardPaste size={14} />
-              Paste & Parse
+              Paste &amp; Parse
             </button>
           </div>
 
-          {/* ── Paste & parse panel ──────────────────────────────────────── */}
+          {/* ── Paste panel ─────────────────────────────────────────────── */}
           {pasteOpen && (
             <div className="paste-panel">
               <div className="paste-panel-header">
@@ -264,7 +335,6 @@ export default function RecipeForm() {
               </div>
 
               <div className="paste-panel-body">
-                {/* Input side */}
                 <div className="paste-input-col">
                   <textarea
                     ref={pasteRef}
@@ -277,7 +347,6 @@ export default function RecipeForm() {
                   />
                 </div>
 
-                {/* Preview side */}
                 {parsedPreview.length > 0 && (
                   <div className="paste-preview-col">
                     <p className="paste-preview-label">
@@ -324,7 +393,7 @@ export default function RecipeForm() {
           <textarea
             value={form.instructions}
             onChange={(e) => updateField('instructions', e.target.value)}
-            placeholder="Step-by-step instructions..."
+            placeholder="Step-by-step instructions…"
             rows={6}
           />
         </div>
@@ -350,7 +419,7 @@ export default function RecipeForm() {
             Cancel
           </button>
           <button type="submit" className="btn btn-primary" disabled={saving}>
-            {saving ? 'Saving...' : isEdit ? 'Update Recipe' : 'Add Recipe'}
+            {saving ? 'Saving…' : isEdit ? 'Update Recipe' : 'Add Recipe'}
           </button>
         </div>
       </form>
