@@ -1,8 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import {
   onAuthStateChanged,
-  signInWithRedirect,
-  getRedirectResult,
+  signInWithPopup,
   signOut,
 } from 'firebase/auth';
 import { auth, googleProvider } from '../lib/firebase';
@@ -26,14 +25,6 @@ export function AuthProvider({ children }) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Handle redirect result when returning from Google sign-in
-    getRedirectResult(auth).catch((err) => {
-      console.error('Redirect auth error:', err.code, err.message);
-      if (err.code !== 'auth/popup-closed-by-user') {
-        setError(`Login failed: ${err.code || err.message}`);
-      }
-    });
-
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       if (firebaseUser && ALLOWED_EMAILS.includes(firebaseUser.email)) {
         setUser(firebaseUser);
@@ -50,9 +41,19 @@ export function AuthProvider({ children }) {
     return unsubscribe;
   }, []);
 
-  const login = () => {
+  const login = async () => {
     setError(null);
-    signInWithRedirect(auth, googleProvider);
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (err) {
+      console.error('Login error:', err.code, err.message);
+      if (
+        err.code !== 'auth/popup-closed-by-user' &&
+        err.code !== 'auth/cancelled-popup-request'
+      ) {
+        setError(`Login failed: ${err.code || err.message}`);
+      }
+    }
   };
 
   const logout = () => signOut(auth);
