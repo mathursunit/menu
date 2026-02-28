@@ -87,7 +87,7 @@ export function MealPlannerModal({ isOpen, onClose }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal modal-lg" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px' }}>
         <div className="modal-header">
           <h2>Generate Weekly Meal Plan</h2>
           <button className="modal-close" onClick={onClose}>
