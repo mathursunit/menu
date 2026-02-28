@@ -4,7 +4,7 @@ import { RECIPE_TAGS, UNIT_OPTIONS } from '../utils/constants';
 // ── Config ───────────────────────────────────────────────────────────────────
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const GEMINI_URL =
-  `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+  `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
 // ── Prompt ───────────────────────────────────────────────────────────────────
 const VALID_UNITS = UNIT_OPTIONS.filter(Boolean).join(', ');
