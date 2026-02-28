@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import useRecipes from '../../hooks/useRecipes';
 import { RECIPE_TAGS, UNIT_OPTIONS } from '../../utils/constants';
-import { Plus, Trash2, ArrowLeft } from 'lucide-react';
+import { parseIngredients } from '../../utils/ingredientParser';
+import { Plus, Trash2, ArrowLeft, ClipboardPaste, CheckCheck, X } from 'lucide-react';
 import './RecipeForm.css';
 
 const emptyIngredient = { name: '', quantity: '', unit: '' };
@@ -25,6 +26,14 @@ export default function RecipeForm() {
   });
   const [saving, setSaving] = useState(false);
 
+  // Paste & parse panel state
+  const [pasteOpen, setPasteOpen] = useState(false);
+  const [pasteText, setPasteText] = useState('');
+  const pasteRef = useRef(null);
+
+  // Live-preview of the parsed result
+  const parsedPreview = parseIngredients(pasteText);
+
   useEffect(() => {
     if (isEdit && recipes.length > 0) {
       const recipe = recipes.find((r) => r.id === id);
@@ -44,6 +53,13 @@ export default function RecipeForm() {
       }
     }
   }, [id, isEdit, recipes]);
+
+  // Focus textarea when the panel opens
+  useEffect(() => {
+    if (pasteOpen && pasteRef.current) {
+      pasteRef.current.focus();
+    }
+  }, [pasteOpen]);
 
   const updateField = (field, value) => setForm((f) => ({ ...f, [field]: value }));
 
@@ -72,6 +88,21 @@ export default function RecipeForm() {
       ...f,
       tags: f.tags.includes(tag) ? f.tags.filter((t) => t !== tag) : [...f.tags, tag],
     }));
+  };
+
+  // Add parsed ingredients to the form list
+  const handleAddParsed = () => {
+    if (parsedPreview.length === 0) return;
+    setForm((f) => {
+      // Drop any trailing completely-empty row before appending
+      const existing = f.ingredients.filter((ing) => ing.name.trim());
+      return {
+        ...f,
+        ingredients: [...existing, ...parsedPreview],
+      };
+    });
+    setPasteText('');
+    setPasteOpen(false);
   };
 
   const handleSubmit = async (e) => {
@@ -161,8 +192,10 @@ export default function RecipeForm() {
           />
         </div>
 
+        {/* ── Ingredients ─────────────────────────────────────────────────── */}
         <div className="form-group">
           <label>Ingredients</label>
+
           <div className="ingredients-list">
             {form.ingredients.map((ing, i) => (
               <div key={i} className="ingredient-row">
@@ -190,16 +223,100 @@ export default function RecipeForm() {
                   ))}
                 </select>
                 {form.ingredients.length > 1 && (
-                  <button type="button" className="ingredient-remove" onClick={() => removeIngredient(i)}>
+                  <button
+                    type="button"
+                    className="ingredient-remove"
+                    onClick={() => removeIngredient(i)}
+                  >
                     <Trash2 size={14} />
                   </button>
                 )}
               </div>
             ))}
           </div>
-          <button type="button" className="btn btn-secondary" onClick={addIngredient}>
-            <Plus size={14} /> Add Ingredient
-          </button>
+
+          <div className="ingredient-actions">
+            <button type="button" className="btn btn-secondary" onClick={addIngredient}>
+              <Plus size={14} /> Add Ingredient
+            </button>
+            <button
+              type="button"
+              className={`btn btn-secondary paste-toggle-btn ${pasteOpen ? 'paste-toggle-btn--active' : ''}`}
+              onClick={() => { setPasteOpen((o) => !o); setPasteText(''); }}
+            >
+              <ClipboardPaste size={14} />
+              Paste & Parse
+            </button>
+          </div>
+
+          {/* ── Paste & parse panel ──────────────────────────────────────── */}
+          {pasteOpen && (
+            <div className="paste-panel">
+              <div className="paste-panel-header">
+                <span className="paste-panel-title">Paste ingredient list</span>
+                <button
+                  type="button"
+                  className="paste-panel-close"
+                  onClick={() => { setPasteOpen(false); setPasteText(''); }}
+                >
+                  <X size={14} />
+                </button>
+              </div>
+
+              <div className="paste-panel-body">
+                {/* Input side */}
+                <div className="paste-input-col">
+                  <textarea
+                    ref={pasteRef}
+                    className="paste-textarea"
+                    placeholder={`Paste one ingredient per line, e.g.\n\n3 Large Eggs\n2 slices Smoked Bacon (chopped)\n1/2 cup Mushrooms (sliced)\n1 tbsp Mayonnaise\n1 pinch Salt`}
+                    value={pasteText}
+                    onChange={(e) => setPasteText(e.target.value)}
+                    rows={8}
+                    spellCheck={false}
+                  />
+                </div>
+
+                {/* Preview side */}
+                {parsedPreview.length > 0 && (
+                  <div className="paste-preview-col">
+                    <p className="paste-preview-label">
+                      {parsedPreview.length} ingredient{parsedPreview.length !== 1 ? 's' : ''} detected
+                    </p>
+                    <ul className="paste-preview-list">
+                      {parsedPreview.map((ing, i) => (
+                        <li key={i} className="paste-preview-item">
+                          <span className="paste-preview-qty">
+                            {ing.quantity}{ing.unit ? ` ${ing.unit}` : ''}
+                          </span>
+                          <span className="paste-preview-name">{ing.name}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+
+              <div className="paste-panel-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => { setPasteOpen(false); setPasteText(''); }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={handleAddParsed}
+                  disabled={parsedPreview.length === 0}
+                >
+                  <CheckCheck size={14} />
+                  Add {parsedPreview.length > 0 ? parsedPreview.length : ''} Ingredient{parsedPreview.length !== 1 ? 's' : ''}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="form-group">
