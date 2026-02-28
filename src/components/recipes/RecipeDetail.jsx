@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import useRecipes from '../../hooks/useRecipes';
+import { useRecipeScaling } from '../../hooks/useRecipeScaling';
 import { ArrowLeft, Edit, Trash2, Star, Clock } from 'lucide-react';
 import './RecipeDetail.css';
 
@@ -7,8 +9,12 @@ export default function RecipeDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { recipes, loading, deleteRecipe, toggleFavorite } = useRecipes();
+  const [selectedServings, setSelectedServings] = useState(null);
 
   const recipe = recipes.find((r) => r.id === id);
+  const baseServings = recipe?.baseServings || 2;
+  const targetServings = selectedServings || baseServings;
+  const { scaledRecipe, scaleFactor } = useRecipeScaling(recipe, targetServings);
 
   if (loading) return <div className="recipe-detail-loading">Loading...</div>;
   if (!recipe) return <div className="recipe-detail-loading">Recipe not found.</div>;
@@ -55,11 +61,22 @@ export default function RecipeDetail() {
       </div>
 
       <div className="recipe-detail-meta">
-        {recipe.prepTime && (
-          <span><Clock size={14} /> Prep: {recipe.prepTime}m</span>
+        <div className="recipe-serving-selector">
+          <label>Serves: </label>
+          <select value={selectedServings || ''} onChange={(e) => setSelectedServings(e.target.value ? Number(e.target.value) : null)}>
+            <option value="">{baseServings} (original)</option>
+            {[1, 2, 3, 4, 6, 8, 12].filter(s => s !== baseServings).map(s => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+          {scaleFactor !== 1 && <span className="recipe-scale-indicator">({scaleFactor.toFixed(1)}x)</span>}
+        </div>
+
+        {scaledRecipe?.prepTime && (
+          <span><Clock size={14} /> Prep: {scaledRecipe.prepTime}m</span>
         )}
-        {recipe.cookTime && (
-          <span><Clock size={14} /> Cook: {recipe.cookTime}m</span>
+        {scaledRecipe?.cookTime && (
+          <span><Clock size={14} /> Cook: {scaledRecipe.cookTime}m</span>
         )}
       </div>
 
@@ -71,26 +88,35 @@ export default function RecipeDetail() {
         </div>
       )}
 
-      {recipe.ingredients?.length > 0 && (
+      {scaledRecipe?.ingredients?.length > 0 && (
         <div className="recipe-detail-section">
           <h3>Ingredients</h3>
           <ul className="recipe-detail-ingredients">
-            {recipe.ingredients.map((ing, i) => (
-              <li key={i}>
-                {ing.quantity && <strong>{ing.quantity}</strong>}
-                {ing.unit && ` ${ing.unit}`}
-                {' '}{ing.name}
-              </li>
-            ))}
+            {scaledRecipe.ingredients.map((ing, i) => {
+              const origIng = recipe.ingredients[i];
+              const hasScaled = scaleFactor !== 1 && origIng?.quantity;
+              return (
+                <li key={i} className={hasScaled ? 'ingredient-scaled' : ''}>
+                  {ing.quantity && <strong>{ing.quantity}</strong>}
+                  {ing.unit && ` ${ing.unit}`}
+                  {' '}{ing.name}
+                  {hasScaled && origIng?.quantity && (
+                    <span className="ingredient-original">
+                      {' '}(was {origIng.quantity}{origIng.unit ? ` ${origIng.unit}` : ''})
+                    </span>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}
 
-      {recipe.instructions && (
+      {scaledRecipe?.instructions && (
         <div className="recipe-detail-section">
           <h3>Instructions</h3>
           <div className="recipe-detail-instructions">
-            {recipe.instructions.split('\n').map((line, i) => (
+            {scaledRecipe.instructions.split('\n').map((line, i) => (
               <p key={i}>{line}</p>
             ))}
           </div>

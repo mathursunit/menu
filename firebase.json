@@ -12,5 +12,13 @@
         "supportEmail": "sunit.mathur@gmail.com"
       }
     }
+  },
+  "hosting": {
+    "public": "hosting_public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
   }
 }

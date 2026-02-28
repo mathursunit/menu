@@ -22,6 +22,7 @@ export default function RecipeForm() {
     instructions: '',
     prepTime: '',
     cookTime: '',
+    baseServings: 2,
     imageUrl: '',
     tags: [],
     ingredients: [{ ...emptyIngredient }],
@@ -48,6 +49,7 @@ export default function RecipeForm() {
           instructions: recipe.instructions || '',
           prepTime:     recipe.prepTime     || '',
           cookTime:     recipe.cookTime     || '',
+          baseServings: recipe.baseServings || 2,
           imageUrl:     recipe.imageUrl     || '',
           tags:         recipe.tags         || [],
           ingredients:  recipe.ingredients?.length
@@ -137,6 +139,7 @@ export default function RecipeForm() {
     setSaving(true);
     const data = {
       ...form,
+      baseServings: Number(form.baseServings) || 2,
       prepTime:    form.prepTime    ? Number(form.prepTime)    : null,
       cookTime:    form.cookTime    ? Number(form.cookTime)    : null,
       ingredients: form.ingredients.filter((ing) => ing.name.trim()),
@@ -234,6 +237,17 @@ export default function RecipeForm() {
 
         <div className="form-row">
           <div className="form-group">
+            <label>Base Servings</label>
+            <input
+              type="number"
+              value={form.baseServings}
+              onChange={(e) => updateField('baseServings', e.target.value)}
+              min="1"
+              max="12"
+              placeholder="2"
+            />
+          </div>
+          <div className="form-group">
             <label>Prep Time (min)</label>
             <input
               type="number"
@@ -242,6 +256,9 @@ export default function RecipeForm() {
               min="0"
             />
           </div>
+        </div>
+
+        <div className="form-row">
           <div className="form-group">
             <label>Cook Time (min)</label>
             <input
@@ -250,6 +267,10 @@ export default function RecipeForm() {
               onChange={(e) => updateField('cookTime', e.target.value)}
               min="0"
             />
+          </div>
+          <div className="form-group">
+            <label>&nbsp;</label>
+            <div style={{ opacity: 0 }}>-</div>
           </div>
         </div>
 
