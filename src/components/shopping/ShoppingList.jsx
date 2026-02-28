@@ -9,31 +9,60 @@ import { ShoppingCart, Plus, Trash2, Check, RefreshCw } from 'lucide-react';
 import './ShoppingList.css';
 
 export default function ShoppingList() {
-  const weekStart = useMemo(() => getWeekStart(new Date()), []);
-  const weekDates = useMemo(() => getWeekDates(weekStart), [weekStart]);
-  const { mealPlan } = useMealPlan(weekStart, 'week');
+  const today = new Date();
+  const [selectedWeekStart, setSelectedWeekStart] = useState(() => getWeekStart(today));
+  const weekDates = useMemo(() => getWeekDates(selectedWeekStart), [selectedWeekStart]);
+  const { mealPlan } = useMealPlan(selectedWeekStart, 'week');
   const { recipes } = useRecipes();
   const { lists, loading, createList, toggleItem, deleteList } = useShoppingList();
 
   const [generating, setGenerating] = useState(false);
 
+  const goToPreviousWeek = () => {
+    const prev = new Date(selectedWeekStart);
+    prev.setDate(prev.getDate() - 7);
+    setSelectedWeekStart(getWeekStart(prev));
+  };
+
+  const goToNextWeek = () => {
+    const next = new Date(selectedWeekStart);
+    next.setDate(next.getDate() + 7);
+    setSelectedWeekStart(getWeekStart(next));
+  };
+
+  const goToThisWeek = () => {
+    setSelectedWeekStart(getWeekStart(today));
+  };
+
   const generateList = async () => {
     setGenerating(true);
     try {
-      // Get all recipe IDs from the current week's meal plan
-      const recipeIds = new Set();
+      // Get all recipes from the selected week's meal plan
+      const plannedRecipes = [];
       weekDates.forEach((dateId) => {
         const dayPlan = mealPlan[dateId];
         if (!dayPlan?.meals) return;
         MEAL_TYPES.forEach((type) => {
           const meal = dayPlan.meals[type];
-          if (meal?.recipeId) recipeIds.add(meal.recipeId);
+          // Handle both old format (recipeId) and new format (full recipe object)
+          if (meal) {
+            if (meal.id) {
+              // Meal is a full recipe object
+              plannedRecipes.push(meal);
+            } else if (meal.recipeId) {
+              // Meal is just an ID, find the recipe
+              const recipe = recipes.find((r) => r.id === meal.recipeId);
+              if (recipe) plannedRecipes.push(recipe);
+            }
+          }
         });
       });
 
-      // Get full recipes for those IDs
-      const plannedRecipes = recipes.filter((r) => recipeIds.has(r.id));
-      const items = consolidateIngredients(plannedRecipes);
+      // Remove duplicates and consolidate ingredients
+      const uniqueRecipes = Array.from(
+        new Map(plannedRecipes.map((r) => [r.id, r])).values()
+      );
+      const items = consolidateIngredients(uniqueRecipes);
 
       if (items.length === 0) {
         alert('No meals planned for this week, or planned meals have no ingredients.');
@@ -52,10 +81,26 @@ export default function ShoppingList() {
     <div className="shopping-page">
       <div className="shopping-header">
         <h2>Shopping Lists</h2>
-        <button className="btn btn-primary" onClick={generateList} disabled={generating}>
-          <Plus size={18} />
-          <span>{generating ? 'Generating...' : `Generate for ${formatWeekRange(weekStart)}`}</span>
-        </button>
+        <div className="shopping-controls">
+          <div className="week-selector">
+            <button className="btn btn-secondary" onClick={goToPreviousWeek} title="Previous week">
+              ← Prev
+            </button>
+            <span className="week-range">{formatWeekRange(selectedWeekStart)}</span>
+            <button className="btn btn-secondary" onClick={goToNextWeek} title="Next week">
+              Next →
+            </button>
+            {formatWeekRange(selectedWeekStart) !== formatWeekRange(getWeekStart(today)) && (
+              <button className="btn btn-secondary" onClick={goToThisWeek} title="Go to this week">
+                This Week
+              </button>
+            )}
+          </div>
+          <button className="btn btn-primary" onClick={generateList} disabled={generating}>
+            <Plus size={18} />
+            <span>{generating ? 'Generating...' : 'Generate List'}</span>
+          </button>
+        </div>
       </div>
 
       {loading ? (
