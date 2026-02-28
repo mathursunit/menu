@@ -122,5 +122,53 @@ export default function useMealPlan(startDate, view = 'week') {
     [user]
   );
 
-  return { mealPlan, loading, assignMeal, removeMeal, toggleCooked, setMealPhoto };
+  const applyGeneratedMeals = useCallback(
+    async (generatedPlan) => {
+      try {
+        // Apply each meal to the calendar
+        for (const [dateId, meals] of Object.entries(generatedPlan)) {
+          const ref = doc(db, 'mealPlans', dateId);
+
+          const mealsObject = {};
+          for (const [mealType, recipe] of Object.entries(meals)) {
+            if (recipe) {
+              mealsObject[mealType] = {
+                recipeId: recipe.id,
+                recipeName: recipe.name,
+                isCooked: false,
+                cookedAt: null,
+                cookedBy: null,
+                photoUrl: null,
+              };
+            }
+          }
+
+          await setDoc(
+            ref,
+            {
+              date: dateId,
+              meals: mealsObject,
+              updatedAt: serverTimestamp(),
+              updatedBy: user.uid,
+            },
+            { merge: true }
+          );
+        }
+      } catch (error) {
+        console.error('Error applying generated meals:', error);
+        throw error;
+      }
+    },
+    [user]
+  );
+
+  return {
+    mealPlan,
+    loading,
+    assignMeal,
+    removeMeal,
+    toggleCooked,
+    setMealPhoto,
+    applyGeneratedMeals,
+  };
 }

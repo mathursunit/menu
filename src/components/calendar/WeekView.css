@@ -7,6 +7,42 @@
   gap: var(--space-sm);
 }
 
+.week-view-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.btn-generate-week {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: white;
+  background: var(--color-primary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-generate-week:hover {
+  background: var(--primary-color-dark, #e67e50);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(230, 126, 80, 0.3);
+}
+
+.btn-generate-week:active {
+  transform: translateY(0);
+}
+
+.btn-generate-week svg {
+  width: 18px;
+  height: 18px;
+}
+
 .view-toggle-link {
   display: inline-flex;
   align-items: center;

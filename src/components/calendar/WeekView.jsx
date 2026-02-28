@@ -5,8 +5,9 @@ import useRecipes from '../../hooks/useRecipes';
 import DayColumn from './DayColumn';
 import CalendarNav from './CalendarNav';
 import RecipePicker from './RecipePicker';
+import { MealPlannerModal } from '../meals/MealPlannerModal';
 import { getWeekStart, getWeekDates, addWeeks, formatDate, formatWeekRange } from '../../utils/dates';
-import { CalendarRange } from 'lucide-react';
+import { CalendarRange, Sparkles } from 'lucide-react';
 import './WeekView.css';
 
 export default function WeekView() {
@@ -24,6 +25,7 @@ export default function WeekView() {
 
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerTarget, setPickerTarget] = useState(null);
+  const [plannerOpen, setPlannerOpen] = useState(false);
 
   const goToWeek = (date) => {
     navigate(`/calendar/week/${formatDate(date)}`);
@@ -51,10 +53,20 @@ export default function WeekView() {
           onNext={() => goToWeek(addWeeks(weekStart, 1))}
           onToday={() => navigate('/calendar')}
         />
-        <Link to="/calendar/month" className="view-toggle-link">
-          <CalendarRange size={18} />
-          <span>Month</span>
-        </Link>
+        <div className="week-view-actions">
+          <button
+            className="btn-generate-week"
+            onClick={() => setPlannerOpen(true)}
+            title="Generate weekly meal plan with AI"
+          >
+            <Sparkles size={18} />
+            <span>Generate Week</span>
+          </button>
+          <Link to="/calendar/month" className="view-toggle-link">
+            <CalendarRange size={18} />
+            <span>Month</span>
+          </Link>
+        </div>
       </div>
 
       {loading ? (
@@ -82,6 +94,8 @@ export default function WeekView() {
           onClose={() => setPickerOpen(false)}
         />
       )}
+
+      <MealPlannerModal isOpen={plannerOpen} onClose={() => setPlannerOpen(false)} />
     </div>
   );
 }
