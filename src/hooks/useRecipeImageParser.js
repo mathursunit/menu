@@ -1,19 +1,22 @@
 import { useState, useCallback } from 'react';
-import { getAI, getGenerativeModel, GoogleAIBackend } from 'firebase/ai';
-import app from '../lib/firebase';
 import { RECIPE_TAGS, UNIT_OPTIONS } from '../utils/constants';
 
-// ── Prompt ──────────────────────────────────────────────────────────────────
+// ── Config ───────────────────────────────────────────────────────────────────
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+const GEMINI_URL =
+  `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+// ── Prompt ───────────────────────────────────────────────────────────────────
 const VALID_UNITS = UNIT_OPTIONS.filter(Boolean).join(', ');
 const VALID_TAGS  = RECIPE_TAGS.join(', ');
 
 const PROMPT = `
 You are a recipe extraction assistant. Extract ALL recipe information visible in this image.
-Return ONLY valid JSON — no markdown fences, no explanation. Use this exact structure:
+Return ONLY valid JSON — no markdown fences, no explanation.
 
 {
   "name": "Recipe Name",
-  "description": "One-sentence description of the dish",
+  "description": "One-sentence description",
   "prepTime": 15,
   "cookTime": 30,
   "ingredients": [
@@ -24,41 +27,14 @@ Return ONLY valid JSON — no markdown fences, no explanation. Use this exact st
 }
 
 Rules:
-• "unit" must be one of: ${VALID_UNITS} — or an empty string "" if there is no unit.
-• "tags" must only contain values from: ${VALID_TAGS} — pick only the ones that fit.
-• "prepTime" and "cookTime" are integers (minutes). Use null if not shown.
-• "quantity" is always a string (e.g. "1/2", "3", "1.5"). Use "" if not shown.
-• If any top-level field cannot be determined, use null.
-• "ingredients" and "name" are required — always include them.
+• "unit" must be one of: ${VALID_UNITS} — or "" if there is no unit.
+• "tags" must only contain values from: ${VALID_TAGS}
+• "prepTime" and "cookTime" are integers (minutes) or null if not shown.
+• "quantity" is always a string ("1/2", "3", "1.5") or "" if not shown.
+• "ingredients" and "name" are required.
 `.trim();
 
-// ── Schema for guaranteed-valid JSON output ──────────────────────────────────
-const RESPONSE_SCHEMA = {
-  type: 'object',
-  properties: {
-    name:         { type: 'string' },
-    description:  { type: 'string' },
-    prepTime:     { type: 'number' },
-    cookTime:     { type: 'number' },
-    instructions: { type: 'string' },
-    ingredients: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          name:     { type: 'string' },
-          quantity: { type: 'string' },
-          unit:     { type: 'string' },
-        },
-        required: ['name', 'quantity', 'unit'],
-      },
-    },
-    tags: { type: 'array', items: { type: 'string' } },
-  },
-  required: ['name', 'ingredients'],
-};
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -69,23 +45,23 @@ function fileToBase64(file) {
 }
 
 function friendlyError(err) {
-  const msg  = err?.message ?? '';
-  const code = err?.code    ?? '';
-  const full = `${code} ${msg}`.toLowerCase();
+  const msg  = (err?.message ?? '').toLowerCase();
+  const code = String(err?.status ?? err?.code ?? '').toLowerCase();
+  const full = `${code} ${msg}`;
   if (full.includes('safety'))
     return 'Image was flagged by safety filters. Try a different photo.';
   if (full.includes('quota') || full.includes('429') || full.includes('resource_exhausted'))
-    return 'API quota reached — wait a moment and try again.';
-  if (full.includes('network') || full.includes('fetch failed'))
+    return 'API rate limit hit — wait a moment and try again.';
+  if (full.includes('api_key') || full.includes('403') || full.includes('permission'))
+    return 'API key error — contact support.';
+  if (full.includes('network') || full.includes('failed to fetch'))
     return 'Network error — check your connection and try again.';
-  if (full.includes('permission') || full.includes('403') || full.includes('api_key'))
-    return 'API access error — try again in a moment.';
-  return "Couldn't read the recipe from this image. Try a clearer or better-lit photo.";
+  return "Couldn't read the recipe from this image. Try a clearer photo.";
 }
 
 // ── Hook ─────────────────────────────────────────────────────────────────────
 export function useRecipeImageParser() {
-  const [analyzing, setAnalyzing] = useState(false);
+  const [analyzing,    setAnalyzing]    = useState(false);
   const [analyzeError, setAnalyzeError] = useState(null);
 
   const parseImage = useCallback(async (file) => {
@@ -95,31 +71,68 @@ export function useRecipeImageParser() {
     try {
       const base64 = await fileToBase64(file);
 
-      const ai    = getAI(app, { backend: new GoogleAIBackend() });
-      const model = getGenerativeModel(ai, {
-        model: 'gemini-2.0-flash',
-        generationConfig: {
-          responseMimeType: 'application/json',
-          responseSchema: RESPONSE_SCHEMA,
-        },
+      // Call Gemini REST API directly
+      const response = await fetch(GEMINI_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              { text: PROMPT },
+              { inline_data: { mime_type: file.type, data: base64 } },
+            ],
+          }],
+          generationConfig: {
+            responseMimeType: 'application/json',
+            responseSchema: {
+              type: 'OBJECT',
+              properties: {
+                name:         { type: 'STRING' },
+                description:  { type: 'STRING' },
+                prepTime:     { type: 'NUMBER' },
+                cookTime:     { type: 'NUMBER' },
+                instructions: { type: 'STRING' },
+                tags:         { type: 'ARRAY', items: { type: 'STRING' } },
+                ingredients: {
+                  type: 'ARRAY',
+                  items: {
+                    type: 'OBJECT',
+                    properties: {
+                      name:     { type: 'STRING' },
+                      quantity: { type: 'STRING' },
+                      unit:     { type: 'STRING' },
+                    },
+                    required: ['name', 'quantity', 'unit'],
+                  },
+                },
+              },
+              required: ['name', 'ingredients'],
+            },
+          },
+        }),
       });
 
-      const result = await model.generateContent([
-        PROMPT,
-        { inlineData: { data: base64, mimeType: file.type } },
-      ]);
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        const apiErr  = errData?.error ?? {};
+        throw Object.assign(
+          new Error(apiErr.message ?? `HTTP ${response.status}`),
+          { status: response.status, code: apiErr.status }
+        );
+      }
 
-      const raw    = result.response.text();
-      const parsed = JSON.parse(raw);
+      const data   = await response.json();
+      const text   = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '{}';
+      const parsed = JSON.parse(text);
 
-      // Normalise so the form never gets undefined fields
+      // Normalise fields so the form never sees undefined/wrong types
       return {
-        name:         parsed.name        ?? '',
-        description:  parsed.description ?? '',
-        prepTime:     parsed.prepTime    ?? '',
-        cookTime:     parsed.cookTime    ?? '',
+        name:         parsed.name         ?? '',
+        description:  parsed.description  ?? '',
+        prepTime:     parsed.prepTime     ?? '',
+        cookTime:     parsed.cookTime     ?? '',
         instructions: parsed.instructions ?? '',
-        tags:         Array.isArray(parsed.tags) ? parsed.tags.filter(t => RECIPE_TAGS.includes(t)) : [],
+        tags:         (parsed.tags ?? []).filter(t => RECIPE_TAGS.includes(t)),
         ingredients:  (parsed.ingredients ?? []).map(ing => ({
           name:     ing.name     ?? '',
           quantity: String(ing.quantity ?? ''),
@@ -127,7 +140,7 @@ export function useRecipeImageParser() {
         })),
       };
     } catch (err) {
-      console.error('Recipe image parse error:', err);
+      console.error('[RecipeImageParser]', err);
       setAnalyzeError(friendlyError(err));
       return null;
     } finally {
