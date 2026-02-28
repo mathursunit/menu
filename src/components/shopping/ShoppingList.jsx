@@ -75,11 +75,22 @@ export default function ShoppingList() {
       const uniqueRecipes = Array.from(
         new Map(plannedRecipes.map((r) => [r.id, r])).values()
       );
-      const items = consolidateIngredients(uniqueRecipes);
+      let items = consolidateIngredients(uniqueRecipes);
 
+      // If no ingredients found, create simple list from recipe names
       if (items.length === 0) {
-        alert(`Found ${mealsFound} meals but no ingredients. Make sure your recipes have ingredients listed.`);
-        return;
+        if (mealsFound > 0) {
+          alert(`Created shopping list with ${mealsFound} meals (no detailed ingredients found). Add ingredients to recipes for a consolidated list.`);
+          // Create simple ingredient items from recipe names
+          items = uniqueRecipes.map((recipe, idx) => ({
+            id: `recipe-${idx}`,
+            name: recipe.name,
+            quantity: '1',
+          }));
+        } else {
+          alert('No meals planned for this week. Go to the calendar and add some meals first!');
+          return;
+        }
       }
 
       const startDate = weekDates[0];
