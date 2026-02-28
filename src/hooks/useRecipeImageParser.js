@@ -69,16 +69,18 @@ function fileToBase64(file) {
 }
 
 function friendlyError(err) {
-  const msg   = err?.message ?? '';
-  const code  = err?.code    ?? '';
-  const full  = `${code} ${msg}`.toLowerCase();
-  console.error('[RecipeImageParser] raw error:', err);
+  const msg  = err?.message ?? '';
+  const code = err?.code    ?? '';
+  const full = `${code} ${msg}`.toLowerCase();
   if (full.includes('safety'))
     return 'Image was flagged by safety filters. Try a different photo.';
+  if (full.includes('quota') || full.includes('429') || full.includes('resource_exhausted'))
+    return 'API quota reached — wait a moment and try again.';
   if (full.includes('network') || full.includes('fetch failed'))
     return 'Network error — check your connection and try again.';
-  // Surface the real message during debugging
-  return `Import failed: ${code || msg || 'unknown error'}`;
+  if (full.includes('permission') || full.includes('403') || full.includes('api_key'))
+    return 'API access error — try again in a moment.';
+  return "Couldn't read the recipe from this image. Try a clearer or better-lit photo.";
 }
 
 // ── Hook ─────────────────────────────────────────────────────────────────────
