@@ -57,12 +57,12 @@ export function MealPlannerModal({ isOpen, onClose }) {
   };
 
   const handleApply = async () => {
-    if (!generatedPlan?.mealPlan) return;
+    if (!generatedPlan?.recipeNames) return;
 
     try {
       // Convert recipe names to recipe objects
       const mealPlanWithRecipes = {};
-      for (const [dateId, meals] of Object.entries(generatedPlan.mealPlan)) {
+      for (const [dateId, meals] of Object.entries(generatedPlan.recipeNames)) {
         const mealsWithRecipes = {};
         for (const [mealType, recipeName] of Object.entries(meals)) {
           if (recipeName) {
