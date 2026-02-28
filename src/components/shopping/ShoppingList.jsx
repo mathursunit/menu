@@ -35,28 +35,41 @@ export default function ShoppingList() {
   };
 
   const generateList = async () => {
+    if (loading) {
+      alert('Meal plan is still loading. Please wait a moment and try again.');
+      return;
+    }
+
     setGenerating(true);
     try {
       // Get all recipes from the selected week's meal plan
       const plannedRecipes = [];
+      let mealsFound = 0;
+
       weekDates.forEach((dateId) => {
         const dayPlan = mealPlan[dateId];
         if (!dayPlan?.meals) return;
+
         MEAL_TYPES.forEach((type) => {
           const meal = dayPlan.meals[type];
-          // Handle both old format (recipeId) and new format (full recipe object)
-          if (meal) {
-            if (meal.id) {
-              // Meal is a full recipe object
-              plannedRecipes.push(meal);
-            } else if (meal.recipeId) {
-              // Meal is just an ID, find the recipe
-              const recipe = recipes.find((r) => r.id === meal.recipeId);
-              if (recipe) plannedRecipes.push(recipe);
+          // Meal object should have recipeId and recipeName from Firestore
+          if (meal?.recipeId) {
+            mealsFound++;
+            // Find the recipe by ID
+            const recipe = recipes.find((r) => r.id === meal.recipeId);
+            if (recipe) {
+              plannedRecipes.push(recipe);
+            } else {
+              console.warn(`Recipe not found for ID: ${meal.recipeId} (${meal.recipeName})`);
             }
           }
         });
       });
+
+      if (mealsFound === 0) {
+        alert('No meals planned for this week. Go to the calendar and add some meals first!');
+        return;
+      }
 
       // Remove duplicates and consolidate ingredients
       const uniqueRecipes = Array.from(
@@ -65,13 +78,17 @@ export default function ShoppingList() {
       const items = consolidateIngredients(uniqueRecipes);
 
       if (items.length === 0) {
-        alert('No meals planned for this week, or planned meals have no ingredients.');
+        alert(`Found ${mealsFound} meals but no ingredients. Make sure your recipes have ingredients listed.`);
         return;
       }
 
       const startDate = weekDates[0];
       const endDate = weekDates[6];
       await createList(startDate, endDate, items);
+      alert(`✓ Shopping list created with ${items.length} items!`);
+    } catch (error) {
+      console.error('Error generating shopping list:', error);
+      alert('Error creating shopping list. Check the console for details.');
     } finally {
       setGenerating(false);
     }
