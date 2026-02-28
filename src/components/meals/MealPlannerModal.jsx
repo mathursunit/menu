@@ -258,11 +258,13 @@ function PreviewStep({ generatedPlan, weekStartDate, recipes, onRegenerate, onAp
     Object.entries(generatedPlan.mealPlan).forEach(([dateId, meals]) => {
       const date = new Date(dateId);
       const dayIndex = date.getDay() === 0 ? 6 : date.getDay() - 1;
+      const recipeNames = generatedPlan.recipeNames?.[dateId] || {};
       result.push({
         dateId,
         date,
         dayName: dayNames[dayIndex],
         meals,
+        recipeNames,
       });
     });
     return result;
@@ -284,13 +286,14 @@ function PreviewStep({ generatedPlan, weekStartDate, recipes, onRegenerate, onAp
 
             <div className="meals-list">
               {['breakfast', 'lunch', 'dinner'].map((mealType) => {
-                const recipeName = day.meals[mealType];
-                const recipe = getRecipeInfo(recipeName);
+                const recipeId = day.meals[mealType];
+                const displayName = day.recipeNames?.[mealType] || '—';
+                const recipe = getRecipeInfo(displayName);
 
                 return (
                   <div key={mealType} className="meal-item">
                     <span className="meal-type">{mealType}</span>
-                    <span className="recipe-name">{recipeName || '—'}</span>
+                    <span className="recipe-name">{displayName}</span>
                     {recipe && (
                       <span className="meal-time">
                         {recipe.prepTime + recipe.cookTime}m

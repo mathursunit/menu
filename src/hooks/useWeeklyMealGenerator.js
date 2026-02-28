@@ -189,22 +189,32 @@ export function useWeeklyMealGenerator(preferences, allRecipes) {
           return null;
         }
 
-        // Map recipe names to IDs
+        // Map recipe names to IDs (keep both for preview and storage)
         const mealPlanWithIds = mapRecipeNamesToIds(parsed.mealPlan, allRecipes);
 
-        // Return structured meal plan
+        // Return structured meal plan with both IDs and names
         const result = {
           weekDates,
           mealPlan: {},
+          recipeNames: {}, // Store recipe names for display in preview
         };
 
         weekDates.forEach((date, idx) => {
           const dayKey = `day${idx + 1}`;
           const dayData = mealPlanWithIds[dayKey];
+          const originalDayData = parsed.mealPlan[dayKey];
+
           result.mealPlan[date] = {
             breakfast: dayData?.breakfast || null,
             lunch: dayData?.lunch || null,
             dinner: dayData?.dinner || null,
+          };
+
+          // Store the original recipe names for preview display
+          result.recipeNames[date] = {
+            breakfast: originalDayData?.breakfast || null,
+            lunch: originalDayData?.lunch || null,
+            dinner: originalDayData?.dinner || null,
           };
         });
 
